@@ -9,6 +9,8 @@ from models.factorizer import setup_factorizer
 from data_loader.data_loader import setup_generator
 from utils.evaluate import evaluate_fm
 
+from data_loader.gowalla import GowallaDataset
+
 
 def setup_args(parser=None):
     """ Set up arguments for the Engine
@@ -65,9 +67,10 @@ class Engine(object):
     def __init__(self, opt):
         self._opt = opt
         self._opt['data_path'] = self._opt['data_path'].format(data_type=self._opt['data_type'])
-        self._sampler = setup_generator(opt)
+        #  self._sampler = setup_generator(opt)
+        self._data_generator = GowallaDataset(path=self._opt['data_path'])
 
-        self._opt['field_dims'] = self._sampler.field_dims
+        self._opt['field_dims'] = self._data_generator.field_dims
 
         self._opt['emb_save_path'] = self._opt['emb_save_path'].format(
             factorizer=self._opt['factorizer'],
@@ -153,7 +156,7 @@ class Engine(object):
         eval_interval = self._opt.get('eval_interval')
         display_interval = self._opt.get('display_interval')
 
-        status = dict()
+        #  status = dict()
         flag, test_flag, valid_flag = 0, 0, 0
         valid_mf_loss, train_mf_loss = np.inf, np.inf
         best_valid_result = {"AUC": [0, 0], "LogLoss": [np.inf, 0]}
@@ -161,14 +164,14 @@ class Engine(object):
         epoch_start = datetime.now()
         for step_idx in range(int(max_steps)):
             # Prepare status for current step
-            status['done'] = False
-            status['sampler'] = self._sampler
-            train_mf_loss = self._factorizer.update(self._sampler)
-            status['train_mf_loss'] = train_mf_loss
+            #  status['done'] = False
+            #  status['sampler'] = self._sampler
+            train_mf_loss = self._factorizer.update(self._data_generator)
+            #  status['train_mf_loss'] = train_mf_loss
 
             # Logging & Evaluate on the Evaluate Set
             if self.mode == 'complete' and step_idx % log_interval == 0:
-                epoch_idx = int(step_idx / self._sampler.num_batches_train)
+                epoch_idx = int(step_idx / self._data_generator.num_batches)
                 sparsity, params = self._factorizer.model.calc_sparsity()
                 if not self.retrain:
                     self.save_pruned_embedding(params, step_idx)
@@ -177,17 +180,17 @@ class Engine(object):
 
                 if step_idx % display_interval == 0:
                     print('[Epoch {}|Step {}|Flag {}|Sparsity {:.4f}|Params {}]'.format(epoch_idx,
-                                                                                        step_idx % self._sampler.num_batches_train,
+                                                                                        step_idx % self._data_generator.num_batches,
                                                                                         flag, sparsity, params))
 
-                if step_idx % self._sampler.num_batches_train == 0:
+                if step_idx % self._data_generator.num_batches == 0:
                     threshold = self._factorizer.model.get_threshold()
 
                     self._writer.add_histogram('threshold/epoch_wise/threshold', threshold, epoch_idx)
                     self._writer.add_scalar('train/epoch_wise/sparsity', sparsity, epoch_idx)
                     self._writer.add_scalar('train/epoch_wise/params', params, epoch_idx)
 
-                if (step_idx % self._sampler.num_batches_train == 0) and (epoch_idx % eval_interval == 0) and self.retrain:
+                if (step_idx % self._data_generator.num_batches == 0) and (epoch_idx % eval_interval == 0) and self.retrain:
                     print('Evaluate on test ...')
                     start = datetime.now()
                     eval_res_path = self._opt['eval_res_path'].format(epoch_idx=epoch_idx)
@@ -196,7 +199,7 @@ class Engine(object):
                         os.makedirs(eval_res_dir)
 
                     use_cuda = self._opt['use_cuda']
-                    logloss, auc = evaluate_fm(self._factorizer, self._sampler, use_cuda)
+                    logloss, auc = evaluate_fm(self._factorizer, self._num_batches, use_cuda)
                     self._writer.add_scalar('test/epoch_wise/metron_auc', auc, epoch_idx)
                     self._writer.add_scalar('test/epoch_wise/metron_logloss', logloss, epoch_idx)
                     if logloss < best_test_result['LogLoss'][0]:

@@ -6,6 +6,8 @@ from copy import deepcopy
 from models.modules import LR, FM, DeepFM, AutoInt
 from utils.train import use_cuda, use_optimizer, get_grad_norm
 
+import pdb
+
 
 def setup_factorizer(opt):
     new_opt = deepcopy(opt)
@@ -62,7 +64,7 @@ class Factorizer(object):
         return self.model.get_emb_dims()
 
     def update(self, sampler):
-        if (self.train_step_idx > 0) and (self.train_step_idx % sampler.num_batches_train == 0):
+        if (self.train_step_idx > 0) and (self.train_step_idx % sampler.num_batches == 0):
             self.scheduler.step()
 
         self.train_step_idx += 1
@@ -113,16 +115,18 @@ class FMFactorizer(Factorizer):
         self.optimizer = use_optimizer(self.model, opt)
         self.scheduler = ExponentialLR(self.optimizer, gamma=opt['lr_exp_decay'])
 
-    def update(self, sampler):
+    def update(self, generator):
         """
         update FM model parameters
         """
-        super(FMFactorizer, self).update(sampler)
-        data, labels = sampler.get_sample('train')
+        super(FMFactorizer, self).update(generator)
+        data, labels = generator.sample()
+        data = torch.as_tensor(data)
+        labels = torch.as_tensor(labels)
         if self.use_cuda:
             data, labels = data.cuda(), labels.cuda()
-        prob_preference = self.model.forward(data)
-        non_reg_loss = self.criterion(prob_preference, labels.float()) / (data.size()[0])
+        score = self.model.forward(data)
+        non_reg_loss = self.criterion(score, labels.float()) / (data.size()[0])
         l2_loss = self.model.l2_penalty(data, self.l2_penalty) / (data.size()[0])
         loss = non_reg_loss + l2_loss
         loss.backward()

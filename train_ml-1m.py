@@ -29,7 +29,8 @@ if __name__ == '__main__':
         ##########################
         ## Devices & Efficiency ##
         ##########################
-        use_cuda=True,
+        #  use_cuda=True,
+        use_cuda=False, # NOTE: TEMP!!!
         early_stop=40,
         log_interval=1,
         display_interval=500,

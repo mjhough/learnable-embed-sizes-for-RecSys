@@ -9,6 +9,79 @@ import torch.utils.data
 from tqdm import tqdm
 import pandas as pd
 
+#  class GowallaDataset(torch.utils.data.Dataset)
+#      """
+#      Gowalla dataset
+#      """
+#      #  def __init__(self, dataset_path=None, cache_path='.avazu', rebuild_cache=False, min_threshold=10, num_blocks=8):
+#      def __init__(self,dataset_path="../data/gowalla"):
+#          # train or test
+#          cprint(f'loading [{path}]')
+#          self.split = config['A_split']
+#          self.folds = config['A_n_fold']
+#          self.mode_dict = {'train': 0, "test": 1}
+#          self.mode = self.mode_dict['train']
+#          self.n_user = 0
+#          self.m_item = 0
+#          train_file = path + '/train.txt'
+#          test_file = path + '/test.txt'
+#          self.path = path
+#          trainUniqueUsers, trainItem, trainUser = [], [], []
+#          testUniqueUsers, testItem, testUser = [], [], []
+#          self.traindataSize = 0
+#          self.testDataSize = 0
+
+#          with open(train_file) as f:
+#              for l in f.readlines():
+#                  if len(l) > 0:
+#                      l = l.strip('\n').split(' ')
+#                      items = [int(i) for i in l[1:]]
+#                      uid = int(l[0])
+#                      trainUniqueUsers.append(uid)
+#                      trainUser.extend([uid] * len(items))
+#                      trainItem.extend(items)
+#                      self.m_item = max(self.m_item, max(items))
+#                      self.n_user = max(self.n_user, uid)
+#                      self.traindataSize += len(items)
+#          self.trainUniqueUsers = np.array(trainUniqueUsers)
+#          self.trainUser = np.array(trainUser)
+#          self.trainItem = np.array(trainItem)
+
+#          with open(test_file) as f:
+#              for l in f.readlines():
+#                  if len(l) > 0:
+#                      l = l.strip('\n').split(' ')
+#                      items = [int(i) for i in l[1:]]
+#                      uid = int(l[0])
+#                      testUniqueUsers.append(uid)
+#                      testUser.extend([uid] * len(items))
+#                      testItem.extend(items)
+#                      self.m_item = max(self.m_item, max(items))
+#                      self.n_user = max(self.n_user, uid)
+#                      self.testDataSize += len(items)
+#          self.m_item += 1
+#          self.n_user += 1
+#          self.testUniqueUsers = np.array(testUniqueUsers)
+#          self.testUser = np.array(testUser)
+#          self.testItem = np.array(testItem)
+        
+#          self.Graph = None
+#          print(f"{self.trainDataSize} interactions for training")
+#          print(f"{self.testDataSize} interactions for testing")
+#          print(f"{world.dataset} Sparsity : {(self.trainDataSize + self.testDataSize) / self.n_users / self.m_items}")
+
+#          # (users,items), bipartite graph
+#          self.UserItemNet = csr_matrix((np.ones(len(self.trainUser)), (self.trainUser, self.trainItem)),
+#                                        shape=(self.n_user, self.m_item))
+#          self.users_D = np.array(self.UserItemNet.sum(axis=1)).squeeze()
+#          self.users_D[self.users_D == 0.] = 1
+#          self.items_D = np.array(self.UserItemNet.sum(axis=0)).squeeze()
+#          self.items_D[self.items_D == 0.] = 1.
+#          # pre-calculate
+#          self._allPos = self.getUserPosItems(list(range(self.n_user)))
+#          self.__testDict = self.__build_test()
+#          print(f"{world.dataset} is ready to go")
+
 
 class AvazuDataset(torch.utils.data.Dataset):
     """

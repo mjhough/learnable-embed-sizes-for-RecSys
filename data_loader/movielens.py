@@ -7,6 +7,8 @@ import math
 
 from torch.utils.data import Dataset
 
+import pdb
+
 
 class MovieLensDataset(Dataset):
     def __init__(self, data_path, data_type):
@@ -84,6 +86,8 @@ class MovieLensDataset(Dataset):
         df_data = df_data.merge(df_item, on='item_id', how='left')
 
         data, labels = df_data.iloc[:, 3:], df_data['rating']
+
+        pdb.set_trace()
 
         field_dims = data.nunique()
 
